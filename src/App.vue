@@ -27,12 +27,12 @@ function handleChoose(direction: "left" | "right") {
 </script>
 
 <template>
-  <div class="min-h-screen bg-slate-950">
+  <div class="app-backdrop min-h-screen">
     <MainMenu v-if="phase === 'menu'" :high-score="highScore" @start="startRun" />
 
     <div v-else-if="phase === 'playing'" class="flex flex-col items-center gap-6 px-4 pt-6 pb-10 min-h-screen">
       <StatsRow :stats="stats" :effects="lastEffects" :pulse-id="pulseId" />
-      <div class="text-slate-400 text-sm font-medium tracking-wide">Week {{ week }}</div>
+      <div class="font-mono-brand text-slate-400 text-xs tracking-[0.2em] uppercase">Week {{ week }}</div>
 
       <div class="flex-1 flex items-center justify-center w-full">
         <GameCard v-if="currentCard" :card="currentCard" :locked="locked" @choose="handleChoose" />

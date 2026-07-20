@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import type { Card } from "../types/game";
+import { STAT_KEYS } from "../types/game";
+import { STAT_META } from "../data/statMeta";
+import AvatarBadge from "./AvatarBadge.vue";
 
 const props = defineProps<{
   card: Card;
@@ -23,6 +26,21 @@ const activeDirection = computed<"left" | "right" | null>(() => {
   if (Math.abs(deltaX.value) < 24) return null;
   return deltaX.value > 0 ? "right" : "left";
 });
+
+const dominantStat = computed(() => {
+  let best: (typeof STAT_KEYS)[number] = "Board";
+  let bestMagnitude = -1;
+  for (const key of STAT_KEYS) {
+    const magnitude = Math.abs(props.card.left.effects[key] ?? 0) + Math.abs(props.card.right.effects[key] ?? 0);
+    if (magnitude > bestMagnitude) {
+      bestMagnitude = magnitude;
+      best = key;
+    }
+  }
+  return best;
+});
+
+const accentHex = computed(() => STAT_META[dominantStat.value].hex);
 
 const cardStyle = computed(() => {
   if (exiting.value) {
@@ -76,43 +94,49 @@ function commit(direction: "left" | "right") {
 <template>
   <div class="relative w-full max-w-[420px] select-none">
     <div
-      class="relative rounded-2xl bg-white text-slate-900 shadow-2xl p-6 flex flex-col gap-4 min-h-[320px] touch-none cursor-grab active:cursor-grabbing"
+      class="relative rounded-2xl p-[3px] shadow-2xl touch-none cursor-grab active:cursor-grabbing"
+      style="background: linear-gradient(155deg, #c9a668, #8a6d3b, #c9a668)"
       :style="cardStyle"
       @pointerdown="onPointerDown"
       @pointermove="onPointerMove"
       @pointerup="onPointerUp"
       @pointercancel="onPointerUp"
     >
-      <div
-        class="absolute top-4 left-4 rounded-md border-2 px-2 py-1 text-xs font-bold uppercase tracking-wide transition-opacity"
-        :class="[
-          activeDirection === 'left' ? 'opacity-100' : 'opacity-0',
-          'border-red-500 text-red-500 -rotate-12',
-        ]"
-      >
-        {{ card.left.label }}
-      </div>
-      <div
-        class="absolute top-4 right-4 rounded-md border-2 px-2 py-1 text-xs font-bold uppercase tracking-wide transition-opacity"
-        :class="[
-          activeDirection === 'right' ? 'opacity-100' : 'opacity-0',
-          'border-emerald-500 text-emerald-500 rotate-12',
-        ]"
-      >
-        {{ card.right.label }}
-      </div>
+      <div class="card-parchment relative rounded-[14px] text-slate-900 p-6 flex flex-col gap-4 min-h-[320px] overflow-hidden">
+        <span class="absolute top-3 left-3 font-mono-brand text-[10px] tracking-widest text-slate-500/70">
+          FILE {{ card.id.replace("card_", "#") }}
+        </span>
 
-      <div class="flex items-center gap-3 mt-6">
-        <div class="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center text-xl shrink-0" aria-hidden="true">
-          🧑‍💼
+        <div
+          class="ink-stamp ink-stamp--left absolute top-10 left-3 max-w-[42%] rounded-lg px-2 py-1 text-center text-[10px] leading-tight transition-opacity"
+          :class="[activeDirection === 'left' ? 'opacity-90 animate-stamp-in' : 'opacity-0', '-rotate-[10deg]']"
+        >
+          {{ card.left.label }}
         </div>
-        <div>
-          <div class="font-bold leading-tight">{{ card.speaker }}</div>
-          <div class="text-sm text-slate-500 leading-tight">{{ card.role }}</div>
+        <div
+          class="ink-stamp ink-stamp--right absolute top-10 right-3 max-w-[42%] rounded-lg px-2 py-1 text-center text-[10px] leading-tight transition-opacity"
+          :class="[activeDirection === 'right' ? 'opacity-90 animate-stamp-in' : 'opacity-0', 'rotate-[8deg]']"
+        >
+          {{ card.right.label }}
         </div>
-      </div>
 
-      <p class="text-lg leading-relaxed flex-1">{{ card.text }}</p>
+        <div class="flex items-center gap-3 mt-9">
+          <div
+            class="w-14 h-14 rounded-full shrink-0 bg-white/40"
+            :style="{ boxShadow: `0 0 0 2px ${accentHex}` }"
+          >
+            <AvatarBadge :seed="`${card.speaker}|${card.role}`" :accent="accentHex" />
+          </div>
+          <div class="min-w-0">
+            <div class="font-display text-lg font-semibold leading-tight tracking-wide truncate">{{ card.speaker }}</div>
+            <div class="font-mono-brand text-[11px] uppercase tracking-wider text-slate-500 leading-tight truncate">
+              {{ card.role }}
+            </div>
+          </div>
+        </div>
+
+        <p class="text-lg leading-relaxed flex-1">{{ card.text }}</p>
+      </div>
     </div>
 
     <div class="mt-5 grid grid-cols-2 gap-3">
