@@ -1,45 +1,25 @@
 import type { StatKey } from "../types/game";
 
 export interface StatMeta {
-  icon: string;
   label: string;
   hex: string;
-  bar: string;
-  barWarn: string;
-  text: string;
 }
 
 export const STAT_META: Record<StatKey, StatMeta> = {
   Board: {
-    icon: "💼",
     label: "Board",
-    hex: "#6366f1",
-    bar: "bg-indigo-500",
-    barWarn: "bg-red-500",
-    text: "text-indigo-300",
+    hex: "#5b6b96",
   },
   Culture: {
-    icon: "👥",
     label: "Culture",
-    hex: "#14b8a6",
-    bar: "bg-teal-500",
-    barWarn: "bg-red-500",
-    text: "text-teal-300",
+    hex: "#2f8f6f",
   },
   Velocity: {
-    icon: "📈",
     label: "Velocity",
-    hex: "#f59e0b",
-    bar: "bg-amber-500",
-    barWarn: "bg-red-500",
-    text: "text-amber-300",
+    hex: "#c26a2b",
   },
   Ledger: {
-    icon: "💰",
     label: "Ledger",
-    hex: "#eab308",
-    bar: "bg-yellow-500",
-    barWarn: "bg-red-500",
-    text: "text-yellow-300",
+    hex: "#c7861f",
   },
 };

@@ -1,68 +1,53 @@
 @import "tailwindcss";
 
+/*
+  Palette and type sampled directly from Reigns (Nerial/Devolver) screenshots:
+  near-black ink background, flat mustard/manila card, cream-tan UI text,
+  one crimson accent, and a single blocky pixel typeface used everywhere —
+  no gradients, no textures, no drop shadows, no soft badges.
+*/
 :root {
-  --font-display: "Oswald", "Arial Narrow", sans-serif;
-  --font-mono-brand: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
-  --font-body: "Inter", system-ui, sans-serif;
-  --ink-red: #9b2c2c;
-  --ink-green: #1f6b4d;
-  --parchment: #f2e9d8;
-  --parchment-dark: #e6d9bd;
+  --font-display: "Pixelify Sans", "Courier New", monospace;
+  --ink: #170f09;
+  --ink-panel: #241708;
+  --manila: #c7a44c;
+  --manila-shade: #a9863a;
+  --cream: #ece1bf;
+  --accent-red: #d81e4b;
+  --accent-green: #2f9e6a;
 }
 
 body {
-  font-family: var(--font-body);
+  font-family: var(--font-display);
 }
 
 .font-display {
   font-family: var(--font-display);
 }
 
-.font-mono-brand {
-  font-family: var(--font-mono-brand);
-}
-
-/* Boardroom backdrop: deep charcoal with a faint vignette and ledger-line grid */
+/* App shell: flat near-black, no glow, no grid */
 .app-backdrop {
-  background-color: #0a0d14;
-  background-image:
-    radial-gradient(ellipse at 50% -10%, rgba(99, 102, 241, 0.12), transparent 55%),
-    radial-gradient(ellipse at 50% 110%, rgba(0, 0, 0, 0.6), transparent 60%),
-    repeating-linear-gradient(
-      to bottom,
-      rgba(255, 255, 255, 0.025) 0px,
-      rgba(255, 255, 255, 0.025) 1px,
-      transparent 1px,
-      transparent 34px
-    );
+  background-color: var(--ink);
 }
 
-/* Parchment card face with a subtle grain */
-.card-parchment {
-  background-color: var(--parchment);
-  background-image:
-    linear-gradient(155deg, #faf4e6 0%, var(--parchment) 45%, var(--parchment-dark) 100%),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+/* Flat mustard/manila card face — no gradient, no grain */
+.card-manila {
+  background-color: var(--manila);
 }
 
-/* Rubber-stamp choice affordance */
-.ink-stamp {
-  font-family: var(--font-mono-brand);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  border-width: 3px;
-  border-style: double;
-  mix-blend-mode: multiply;
+.card-manila-dark {
+  background-color: var(--manila-shade);
 }
 
-.ink-stamp--left {
-  color: var(--ink-red);
-  border-color: var(--ink-red);
+.panel-ink {
+  background-color: var(--ink-panel);
 }
 
-.ink-stamp--right {
-  color: var(--ink-green);
-  border-color: var(--ink-green);
+/* Flat drag-choice flag, no rotation, no stamp texture */
+.choice-flag {
+  font-family: var(--font-display);
+  background-color: var(--ink);
+  color: var(--cream);
 }
 
 @keyframes float-up {
@@ -75,7 +60,7 @@ body {
   }
   100% {
     opacity: 0;
-    transform: translateY(-24px);
+    transform: translateY(-20px);
   }
 }
 
@@ -83,27 +68,24 @@ body {
   animation: float-up 900ms ease-out forwards;
 }
 
-@keyframes stamp-in {
+@keyframes flag-in {
   0% {
     opacity: 0;
-    transform: scale(2.4) rotate(-18deg);
-  }
-  60% {
-    opacity: 1;
+    transform: scale(0.8) translateY(4px);
   }
   100% {
     opacity: 1;
-    transform: scale(1) rotate(-8deg);
+    transform: scale(1) translateY(0);
   }
 }
 
-.animate-stamp-in {
-  animation: stamp-in 420ms cubic-bezier(0.2, 0.8, 0.3, 1.1) forwards;
+.animate-flag-in {
+  animation: flag-in 160ms ease-out forwards;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .animate-float-up,
-  .animate-stamp-in {
+  .animate-flag-in {
     animation-duration: 1ms;
   }
 }

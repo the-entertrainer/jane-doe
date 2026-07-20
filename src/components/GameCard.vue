@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import type { Card } from "../types/game";
-import { STAT_KEYS } from "../types/game";
-import { STAT_META } from "../data/statMeta";
 import AvatarBadge from "./AvatarBadge.vue";
 
 const props = defineProps<{
@@ -27,33 +25,33 @@ const activeDirection = computed<"left" | "right" | null>(() => {
   return deltaX.value > 0 ? "right" : "left";
 });
 
-const dominantStat = computed(() => {
-  let best: (typeof STAT_KEYS)[number] = "Board";
-  let bestMagnitude = -1;
-  for (const key of STAT_KEYS) {
-    const magnitude = Math.abs(props.card.left.effects[key] ?? 0) + Math.abs(props.card.right.effects[key] ?? 0);
-    if (magnitude > bestMagnitude) {
-      bestMagnitude = magnitude;
-      best = key;
-    }
-  }
-  return best;
-});
+/* Flat, saturated portrait-frame backgrounds, picked per card — echoes the
+   solid color block behind every Reigns character illustration. */
+const PORTRAIT_COLORS = ["#b3312c", "#2f5f8f", "#3a6b52", "#5a3f7a", "#8a5a2b"];
 
-const accentHex = computed(() => STAT_META[dominantStat.value].hex);
+function hash(input: string): number {
+  let h = 0;
+  for (let i = 0; i < input.length; i++) {
+    h = (h << 5) - h + input.charCodeAt(i);
+    h |= 0;
+  }
+  return Math.abs(h);
+}
+
+const portraitColor = computed(() => PORTRAIT_COLORS[hash(props.card.id) % PORTRAIT_COLORS.length]);
 
 const cardStyle = computed(() => {
   if (exiting.value) {
     const flyX = exiting.value === "right" ? 700 : -700;
     return {
-      transform: `translateX(${flyX}px) rotate(${exiting.value === "right" ? 30 : -30}deg)`,
+      transform: `translateX(${flyX}px) rotate(${exiting.value === "right" ? 25 : -25}deg)`,
       opacity: "0",
-      transition: "transform 400ms ease-in, opacity 400ms ease-in",
+      transition: "transform 380ms ease-in, opacity 380ms ease-in",
     };
   }
   return {
     transform: `translateX(${deltaX.value}px) rotate(${rotation.value}deg)`,
-    transition: dragging.value ? "none" : "transform 300ms ease-out",
+    transition: dragging.value ? "none" : "transform 260ms ease-out",
   };
 });
 
@@ -87,62 +85,58 @@ function commit(direction: "left" | "right") {
     emit("choose", direction);
     exiting.value = null;
     deltaX.value = 0;
-  }, 380);
+  }, 340);
 }
 </script>
 
 <template>
-  <div class="relative w-full max-w-[420px] select-none">
+  <div class="relative w-full max-w-[380px] select-none">
     <div
-      class="relative rounded-2xl p-[3px] shadow-2xl touch-none cursor-grab active:cursor-grabbing"
-      style="background: linear-gradient(155deg, #c9a668, #8a6d3b, #c9a668)"
+      class="card-manila relative rounded-lg touch-none cursor-grab active:cursor-grabbing"
       :style="cardStyle"
       @pointerdown="onPointerDown"
       @pointermove="onPointerMove"
       @pointerup="onPointerUp"
       @pointercancel="onPointerUp"
     >
-      <div class="card-parchment relative rounded-[14px] text-slate-900 p-6 flex flex-col gap-4 min-h-[320px] overflow-hidden">
-        <span class="absolute top-3 left-3 font-mono-brand text-[10px] tracking-widest text-slate-500/70">
-          FILE {{ card.id.replace("card_", "#") }}
-        </span>
-
+      <div class="relative px-6 pt-6 pb-7 flex flex-col items-center gap-4 min-h-[380px] overflow-hidden">
         <div
-          class="ink-stamp ink-stamp--left absolute top-10 left-3 max-w-[42%] rounded-lg px-2 py-1 text-center text-[10px] leading-tight transition-opacity"
-          :class="[activeDirection === 'left' ? 'opacity-90 animate-stamp-in' : 'opacity-0', '-rotate-[10deg]']"
+          class="choice-flag absolute top-4 left-4 max-w-[38%] px-2 py-1 text-center text-[11px] leading-tight transition-opacity"
+          :class="activeDirection === 'left' ? 'opacity-100 animate-flag-in' : 'opacity-0'"
         >
           {{ card.left.label }}
         </div>
         <div
-          class="ink-stamp ink-stamp--right absolute top-10 right-3 max-w-[42%] rounded-lg px-2 py-1 text-center text-[10px] leading-tight transition-opacity"
-          :class="[activeDirection === 'right' ? 'opacity-90 animate-stamp-in' : 'opacity-0', 'rotate-[8deg]']"
+          class="choice-flag absolute top-4 right-4 max-w-[38%] px-2 py-1 text-center text-[11px] leading-tight transition-opacity"
+          :class="activeDirection === 'right' ? 'opacity-100 animate-flag-in' : 'opacity-0'"
         >
           {{ card.right.label }}
         </div>
 
-        <div class="flex items-center gap-3 mt-9">
-          <div
-            class="w-14 h-14 rounded-full shrink-0 bg-white/40"
-            :style="{ boxShadow: `0 0 0 2px ${accentHex}` }"
-          >
-            <AvatarBadge :seed="`${card.speaker}|${card.role}`" :accent="accentHex" />
-          </div>
-          <div class="min-w-0">
-            <div class="font-display text-lg font-semibold leading-tight tracking-wide truncate">{{ card.speaker }}</div>
-            <div class="font-mono-brand text-[11px] uppercase tracking-wider text-slate-500 leading-tight truncate">
-              {{ card.role }}
-            </div>
-          </div>
+        <p class="font-display text-lg leading-snug text-center mt-2" style="color: var(--ink)">
+          {{ card.text }}
+        </p>
+
+        <div class="w-40 h-40 shrink-0 rounded" :style="{ backgroundColor: portraitColor }">
+          <AvatarBadge :seed="`${card.speaker}|${card.role}`" />
         </div>
 
-        <p class="text-lg leading-relaxed flex-1">{{ card.text }}</p>
+        <div class="text-center">
+          <div class="font-display text-base font-semibold leading-tight" style="color: var(--ink)">
+            {{ card.speaker }}
+          </div>
+          <div v-if="card.role" class="font-display text-xs mt-0.5" style="color: var(--ink); opacity: 0.65">
+            {{ card.role }}
+          </div>
+        </div>
       </div>
     </div>
 
     <div class="mt-5 grid grid-cols-2 gap-3">
       <button
         type="button"
-        class="rounded-xl border border-red-500/50 bg-red-500/10 text-red-300 font-semibold py-3 px-3 text-sm hover:bg-red-500/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 transition-colors disabled:opacity-40"
+        class="rounded-md py-3 px-3 text-sm font-display focus:outline-none focus-visible:ring-2 transition-opacity disabled:opacity-40"
+        style="background-color: var(--ink-panel); color: var(--accent-red); --tw-ring-color: var(--accent-red)"
         :disabled="locked"
         @click="commit('left')"
       >
@@ -150,7 +144,8 @@ function commit(direction: "left" | "right") {
       </button>
       <button
         type="button"
-        class="rounded-xl border border-emerald-500/50 bg-emerald-500/10 text-emerald-300 font-semibold py-3 px-3 text-sm hover:bg-emerald-500/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 transition-colors disabled:opacity-40"
+        class="rounded-md py-3 px-3 text-sm font-display focus:outline-none focus-visible:ring-2 transition-opacity disabled:opacity-40"
+        style="background-color: var(--ink-panel); color: var(--accent-green); --tw-ring-color: var(--accent-green)"
         :disabled="locked"
         @click="commit('right')"
       >

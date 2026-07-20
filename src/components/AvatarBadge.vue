@@ -3,7 +3,6 @@ import { computed } from "vue";
 
 const props = defineProps<{
   seed: string;
-  accent: string;
 }>();
 
 function hash(input: string): number {
@@ -19,60 +18,64 @@ function pick<T>(list: T[], salt: number): T {
   return list[(hash(props.seed) + salt) % list.length];
 }
 
-const SKIN_TONES = ["#f4c9a2", "#e0a877", "#c98a5e", "#9c6242", "#6b3f2b"];
-const HAIR_COLORS = ["#2b2320", "#4a3527", "#6b4a2f", "#8a8a8a", "#c9a876", "#1a1a1a"];
+/* Two-tone skin pairs: a base shade and a slightly darker half, echoing the
+   mirrored split-shading Reigns uses on every portrait. */
+const SKIN_PAIRS: [string, string][] = [
+  ["#f0c48f", "#d9a86f"],
+  ["#e8a877", "#cf8a58"],
+  ["#c98a5e", "#ab6f47"],
+  ["#8c5a38", "#734727"],
+  ["#5f3c26", "#4a2e1c"],
+];
 
-type HairStyle = "cap" | "side" | "bun" | "bald" | "curly";
-const HAIR_STYLES: HairStyle[] = ["cap", "side", "bun", "bald", "curly"];
+type Topper = "cap" | "hood" | "side" | "bald" | "peak";
+const TOPPERS: Topper[] = ["cap", "hood", "side", "bald", "peak"];
+const TOPPER_COLORS = ["#241708", "#3a2a17", "#2f3a4d", "#4a1f1f", "#1f2e24"];
 
-const skin = computed(() => pick(SKIN_TONES, 1));
-const hairColor = computed(() => pick(HAIR_COLORS, 2));
-const hairStyle = computed<HairStyle>(() => pick(HAIR_STYLES, 3));
-const collarStyle = computed(() => pick(["tie", "blouse", "open"], 4));
+const skin = computed(() => pick(SKIN_PAIRS, 1));
+const topper = computed<Topper>(() => pick(TOPPERS, 3));
+const topperColor = computed(() => pick(TOPPER_COLORS, 5));
+const accessory = computed(() => pick(["none", "collar", "glasses"], 7));
 </script>
 
 <template>
   <svg viewBox="0 0 64 64" class="w-full h-full" role="img" :aria-label="seed">
-    <circle cx="32" cy="32" r="31" :fill="accent" opacity="0.14" />
-    <circle cx="32" cy="32" r="31" fill="none" :stroke="accent" stroke-width="1.5" opacity="0.5" />
+    <!-- hood/cloak silhouette sits behind the head -->
+    <path v-if="topper === 'hood'" d="M32 6 C16 6 12 26 14 46 L22 46 C20 30 22 16 32 16 C42 16 44 30 42 46 L50 46 C52 26 48 6 32 6 Z" :fill="topperColor" />
 
-    <!-- shoulders / blazer -->
-    <path d="M14 58 L24 40 L40 40 L50 58 Z" fill="#2b3348" />
-    <path v-if="collarStyle === 'tie'" d="M30 40 L34 40 L33 52 L32 56 L31 52 Z" fill="#b91c1c" />
-    <path v-if="collarStyle === 'blouse'" d="M27 40 L32 46 L37 40 Z" fill="#f8fafc" />
+    <!-- shoulders / torso -->
+    <path d="M10 60 L21 40 L43 40 L54 60 Z" :fill="topper === 'hood' ? topperColor : '#1f2937'" />
 
     <!-- neck -->
-    <rect x="27" y="34" width="10" height="10" :fill="skin" />
+    <rect x="26" y="34" width="12" height="10" :fill="skin[1]" />
 
-    <!-- diamond head -->
-    <polygon points="32,10 46,26 32,44 18,26" :fill="skin" />
+    <!-- head: two-tone vertical split, diamond silhouette -->
+    <polygon points="32,8 47,26 32,46 17,26" :fill="skin[1]" />
+    <polygon points="32,8 47,26 32,46" :fill="skin[0]" />
 
-    <!-- hair -->
+    <!-- toppers -->
+    <path v-if="topper === 'cap'" d="M17 26 C17 12 47 12 47 26 C40 19 24 19 17 26 Z" :fill="topperColor" />
     <path
-      v-if="hairStyle === 'cap'"
-      d="M18 26 C18 14 46 14 46 26 C40 20 24 20 18 26 Z"
-      :fill="hairColor"
+      v-else-if="topper === 'side'"
+      d="M17 26 C16 13 30 9 47 20 C38 15 21 16 17 30 Z"
+      :fill="topperColor"
     />
     <path
-      v-else-if="hairStyle === 'side'"
-      d="M18 26 C17 15 30 12 46 22 C38 18 22 18 18 30 Z"
-      :fill="hairColor"
+      v-else-if="topper === 'peak'"
+      d="M32 4 L44 22 L32 18 L20 22 Z"
+      :fill="topperColor"
     />
-    <template v-else-if="hairStyle === 'bun'">
-      <path d="M18 26 C18 15 46 15 46 26 C40 19 24 19 18 26 Z" :fill="hairColor" />
-      <circle cx="32" cy="9" r="4.5" :fill="hairColor" />
+
+    <!-- eyes: bold vertical bars -->
+    <rect x="23" y="24" width="3.4" height="7" :fill="topperColor" />
+    <rect x="37.6" y="24" width="3.4" height="7" :fill="topperColor" />
+
+    <template v-if="accessory === 'glasses'">
+      <rect x="21" y="23" width="8" height="9" fill="none" :stroke="topperColor" stroke-width="1.4" />
+      <rect x="35" y="23" width="8" height="9" fill="none" :stroke="topperColor" stroke-width="1.4" />
+      <line x1="29" y1="27" x2="35" y2="27" :stroke="topperColor" stroke-width="1.4" />
     </template>
-    <path
-      v-else-if="hairStyle === 'curly'"
-      d="M17 27 c-2-6 3-13 15-13 s17 7 15 13 c-3-4-8-2-9-6 c-2 4-9 4-11 0 c-1 4-7 2-10 6 Z"
-      :fill="hairColor"
-    />
 
-    <!-- eyes -->
-    <rect x="24" y="25" width="3" height="3.5" rx="1" fill="#1f2430" />
-    <rect x="37" y="25" width="3" height="3.5" rx="1" fill="#1f2430" />
-
-    <!-- mouth -->
-    <line x1="27" y1="34" x2="37" y2="34" stroke="#1f2430" stroke-width="1.4" stroke-linecap="round" />
+    <path v-if="accessory === 'collar'" d="M18 40 L32 48 L46 40 L46 46 L32 54 L18 46 Z" fill="#0f172a" opacity="0.5" />
   </svg>
 </template>
