@@ -1,7 +1,23 @@
-# Tauri + Vue + TypeScript
+# Jane Doe
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+A sharp, addictive, swipe-based corporate survival game. Keep Board, Culture, Velocity, and Ledger balanced — let any one hit zero or one hundred and your career ends. Inspired by *Reigns*.
 
-## Recommended IDE Setup
+Built with Vue 3 (Composition API, `<script setup>`) + Tailwind CSS + Vite. No backend; high scores are stored in `localStorage`.
 
-- [VS Code](https://code.visualstudio.com/) + [Vue - Official](https://marketplace.visualstudio.com/items?itemName=Vue.volar) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+## Running locally
+
+```bash
+npm install
+npm run dev
+```
+
+Then open the printed local URL in a browser. Drag/swipe the card left or right, or use the buttons underneath it.
+
+## Build
+
+```bash
+npm run build
+npm run preview
+```
+
+See `Jane Doe Game Design Document v1.0` for the full spec this implementation follows.
