@@ -20,4 +20,8 @@ npm run build
 npm run preview
 ```
 
+## Deploy
+
+Static build, no backend or env vars required. Import this repo on [Vercel](https://vercel.com/new) and it deploys as-is — `vercel.json` pins the build command (`npm run build`) and output directory (`dist`).
+
 See `Jane Doe Game Design Document v1.0` for the full spec this implementation follows.
