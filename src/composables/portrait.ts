@@ -87,12 +87,17 @@ const HAIR_FRONT: (string | null)[] = [
 // long hair that sits BEHIND the head
 const HAIR_BACK: (string | null)[] = [null, null, null, "M15,20 C13,44 18,52 24,52 L24,30 C22,20 20,18 20,18 Z M49,20 C51,44 46,52 40,52 L40,30 C42,20 44,18 44,18 Z"];
 
+// Mostly bare heads; hats occasional and the exec crown rare.
 const HEADWEAR: ({ path: string; fill: string } | null)[] = [
+  null,
+  null,
+  null,
+  null,
   null,
   null,
   { path: "M15,24 L49,24 L46,18 Q32,10 18,18 Z M13,24 L51,24 L51,27 L13,27 Z", fill: "#1f2937" }, // cap
   { path: "M17,22 C17,12 47,12 47,22 L47,25 L17,25 Z", fill: "#b3312c" }, // beanie
-  { path: "M20,15 L44,15 L40,7 L36,13 L32,5 L28,13 L24,7 Z", fill: "#d6a52c" }, // little crown (exec)
+  { path: "M20,15 L44,15 L40,7 L36,13 L32,5 L28,13 L24,7 Z", fill: "#d6a52c" }, // little crown (exec) — rare
 ];
 
 const BROWS: string[] = [
@@ -121,9 +126,14 @@ const FACIAL: ({ path: string; fill?: boolean } | null)[] = [
   { path: "M24,36 Q32,54 40,36 Q40,48 32,49 Q24,48 24,36 Z", fill: true }, // full beard
 ];
 
-const GLASSES: ("none" | "round" | "square" | "shades")[] = ["none", "none", "round", "square", "shades"];
+const GLASSES: ("none" | "round" | "square" | "shades")[] = ["none", "none", "none", "round", "square", "shades"];
 
+// Mostly bare; accessories are the occasional flourish, not the norm.
 const ACCESSORY: ("none" | "earrings" | "headset" | "airpods" | "lanyard")[] = [
+  "none",
+  "none",
+  "none",
+  "none",
   "none",
   "none",
   "earrings",
