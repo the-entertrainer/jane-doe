@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import type { Card } from "../types/game";
 import AvatarBadge from "./AvatarBadge.vue";
 
@@ -10,6 +10,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   choose: [direction: "left" | "right"];
+  preview: [direction: "left" | "right" | null];
 }>();
 
 const THRESHOLD = 100;
@@ -18,12 +19,18 @@ const dragging = ref(false);
 const startX = ref(0);
 const deltaX = ref(0);
 const exiting = ref<"left" | "right" | null>(null);
+const hover = ref<"left" | "right" | null>(null);
 
 const rotation = computed(() => deltaX.value / 18);
 const activeDirection = computed<"left" | "right" | null>(() => {
   if (Math.abs(deltaX.value) < 24) return null;
   return deltaX.value > 0 ? "right" : "left";
 });
+
+/* Surface the pending choice so the stat bars can preview its effects:
+   the drag direction takes priority; otherwise a hovered/focused button. */
+const previewDirection = computed<"left" | "right" | null>(() => activeDirection.value ?? hover.value);
+watch(previewDirection, (dir) => emit("preview", dir));
 
 /* Flat, saturated portrait-frame backgrounds, picked per card — echoes the
    solid color block behind every Reigns character illustration. */
@@ -80,6 +87,7 @@ function onPointerUp() {
 
 function commit(direction: "left" | "right") {
   if (props.locked || exiting.value) return;
+  hover.value = null;
   exiting.value = direction;
   window.setTimeout(() => {
     emit("choose", direction);
@@ -139,6 +147,10 @@ function commit(direction: "left" | "right") {
         style="background-color: var(--ink-panel); color: var(--accent-red); --tw-ring-color: var(--accent-red)"
         :disabled="locked"
         @click="commit('left')"
+        @pointerenter="hover = 'left'"
+        @pointerleave="hover = null"
+        @focus="hover = 'left'"
+        @blur="hover = null"
       >
         ← {{ card.left.label }}
       </button>
@@ -148,6 +160,10 @@ function commit(direction: "left" | "right") {
         style="background-color: var(--ink-panel); color: var(--accent-green); --tw-ring-color: var(--accent-green)"
         :disabled="locked"
         @click="commit('right')"
+        @pointerenter="hover = 'right'"
+        @pointerleave="hover = null"
+        @focus="hover = 'right'"
+        @blur="hover = null"
       >
         {{ card.right.label }} →
       </button>
