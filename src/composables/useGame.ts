@@ -37,6 +37,13 @@ function freshStats(): Stats {
   return { Board: 50, Culture: 50, Velocity: 50, Ledger: 50 };
 }
 
+/* Difficulty escalates with tenure: card swings grow, so the balancing act
+   gets progressively harder and even careful play eventually tips over — the
+   run has to end for the score chase to mean anything. Capped so it stays sane. */
+function difficultyScaleAt(w: number): number {
+  return Math.min(2.4, 1 + w * 0.03);
+}
+
 const phase = ref<Phase>("menu");
 const stats = reactive<Stats>(freshStats());
 const week = ref(0);
@@ -49,6 +56,21 @@ const deathInfo = ref<DeathInfo | null>(null);
 const lastEffects = ref<Partial<Stats> | null>(null);
 const wasNewHighScore = ref(false);
 const activeTags = reactive<ActiveTag[]>([]);
+
+const difficultyScale = computed(() => difficultyScaleAt(week.value));
+
+/* The card's effects scaled for the current tenure. Single source of truth so
+   the on-bar drag preview and the actual applied effect can never disagree. */
+function scaleEffects(effects: Partial<Stats>): Partial<Stats> {
+  const scale = difficultyScale.value;
+  const out: Partial<Stats> = {};
+  for (const key of STAT_KEYS) {
+    const d = effects[key];
+    if (d === undefined) continue;
+    out[key] = Math.round(d * scale);
+  }
+  return out;
+}
 
 function applyDelta(effects: Partial<Stats>) {
   for (const key of STAT_KEYS) {
@@ -155,19 +177,22 @@ function choose(direction: "left" | "right") {
   if (phase.value !== "playing" || !currentCard.value) return;
 
   const choice = currentCard.value[direction];
-  lastEffects.value = choice.effects;
+  const scaled = scaleEffects(choice.effects);
+  lastEffects.value = scaled;
 
-  // 1. apply the card's effects, then check for an immediate death
-  applyDelta(choice.effects);
+  // 1. apply the card's (scaled) effects, then check for an immediate death
+  applyDelta(scaled);
   const death = checkDeath();
   if (death) {
     finishRun(death);
     return;
   }
 
-  // 2. new week: any tags earned this decision take hold, then all active
+  // 2. new week: budgets always shrink (a standing Ledger pressure so it stays
+  //    a live axis), any tags earned this decision take hold, then all active
   //    tags drift the stats — which can itself be fatal
   week.value += 1;
+  applyDelta({ Ledger: -1 });
   evaluateTags();
   tickTags();
   const tickDeath = checkDeath();
@@ -196,6 +221,7 @@ export function useGame() {
     deathInfo,
     lastEffects,
     activeTags,
+    scaleEffects,
     isNewHighScore: computed(() => wasNewHighScore.value),
     startRun,
     choose,

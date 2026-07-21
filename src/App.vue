@@ -17,6 +17,7 @@ const {
   deathInfo,
   lastEffects,
   activeTags,
+  scaleEffects,
   isNewHighScore,
   startRun,
   choose,
@@ -31,7 +32,7 @@ const previewDir = ref<"left" | "right" | null>(null);
    live preview on the bars. Cleared while the choice-commit animation runs. */
 const previewEffects = computed<Partial<Stats> | null>(() => {
   if (locked.value || !currentCard.value || !previewDir.value) return null;
-  return currentCard.value[previewDir.value].effects;
+  return scaleEffects(currentCard.value[previewDir.value].effects);
 });
 
 watch(lastEffects, () => {
