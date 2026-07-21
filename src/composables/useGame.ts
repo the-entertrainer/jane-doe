@@ -1,6 +1,7 @@
 import { reactive, ref, computed } from "vue";
 import { cards } from "../data/cards";
 import { deathMessages } from "../data/deaths";
+import { TAGS, type ActiveTag } from "../data/tags";
 import { STAT_KEYS, type Card, type DeathInfo, type Stats } from "../types/game";
 
 const RECENT_HISTORY_SIZE = 9;
@@ -47,6 +48,52 @@ const deathCounts = reactive<DeathCounts>(loadDeaths());
 const deathInfo = ref<DeathInfo | null>(null);
 const lastEffects = ref<Partial<Stats> | null>(null);
 const wasNewHighScore = ref(false);
+const activeTags = reactive<ActiveTag[]>([]);
+
+function applyDelta(effects: Partial<Stats>) {
+  for (const key of STAT_KEYS) {
+    const d = effects[key];
+    if (d === undefined) continue;
+    stats[key] = Math.min(100, Math.max(0, stats[key] + d));
+  }
+}
+
+/* Grant any tag whose threshold just went true (and isn't already active). */
+function evaluateTags() {
+  for (const def of TAGS) {
+    if (activeTags.some((t) => t.id === def.id)) continue;
+    if (def.when(stats)) {
+      activeTags.push({
+        id: def.id,
+        label: def.label,
+        note: def.note,
+        perWeek: def.perWeek,
+        tone: def.tone,
+        remaining: def.duration,
+      });
+    }
+  }
+}
+
+/* Apply each active tag's weekly drift, then age/expire them. */
+function tickTags() {
+  for (const tag of activeTags) applyDelta(tag.perWeek);
+  for (let i = activeTags.length - 1; i >= 0; i--) {
+    activeTags[i].remaining -= 1;
+    if (activeTags[i].remaining <= 0) activeTags.splice(i, 1);
+  }
+}
+
+function finishRun(death: DeathInfo) {
+  deathInfo.value = death;
+  recordDeath(death);
+  wasNewHighScore.value = week.value > highScore.value;
+  if (wasNewHighScore.value) {
+    highScore.value = week.value;
+    localStorage.setItem(HIGH_SCORE_KEY, String(highScore.value));
+  }
+  phase.value = "gameover";
+}
 
 function drawCard(): Card {
   const eligible = cards.filter(
@@ -93,6 +140,7 @@ function startRun() {
   Object.assign(stats, freshStats());
   week.value = 0;
   recentHistory.length = 0;
+  activeTags.length = 0;
   deathInfo.value = null;
   lastEffects.value = null;
   currentCard.value = drawCard();
@@ -109,26 +157,25 @@ function choose(direction: "left" | "right") {
   const choice = currentCard.value[direction];
   lastEffects.value = choice.effects;
 
-  for (const key of STAT_KEYS) {
-    const delta = choice.effects[key];
-    if (delta === undefined) continue;
-    stats[key] = Math.min(100, Math.max(0, stats[key] + delta));
-  }
-
+  // 1. apply the card's effects, then check for an immediate death
+  applyDelta(choice.effects);
   const death = checkDeath();
   if (death) {
-    deathInfo.value = death;
-    recordDeath(death);
-    wasNewHighScore.value = week.value > highScore.value;
-    if (wasNewHighScore.value) {
-      highScore.value = week.value;
-      localStorage.setItem(HIGH_SCORE_KEY, String(highScore.value));
-    }
-    phase.value = "gameover";
+    finishRun(death);
     return;
   }
 
+  // 2. new week: any tags earned this decision take hold, then all active
+  //    tags drift the stats — which can itself be fatal
   week.value += 1;
+  evaluateTags();
+  tickTags();
+  const tickDeath = checkDeath();
+  if (tickDeath) {
+    finishRun(tickDeath);
+    return;
+  }
+
   currentCard.value = drawCard();
   pushHistory(currentCard.value.id);
 }
@@ -148,6 +195,7 @@ export function useGame() {
     deathCounts,
     deathInfo,
     lastEffects,
+    activeTags,
     isNewHighScore: computed(() => wasNewHighScore.value),
     startRun,
     choose,

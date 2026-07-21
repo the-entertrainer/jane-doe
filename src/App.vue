@@ -5,10 +5,23 @@ import StatsRow from "./components/StatsRow.vue";
 import GameCard from "./components/GameCard.vue";
 import GameOver from "./components/GameOver.vue";
 import MainMenu from "./components/MainMenu.vue";
+import TagBanners from "./components/TagBanners.vue";
 import type { Stats } from "./types/game";
 
-const { phase, stats, week, currentCard, highScore, deathInfo, lastEffects, isNewHighScore, startRun, choose, returnToMenu } =
-  useGame();
+const {
+  phase,
+  stats,
+  week,
+  currentCard,
+  highScore,
+  deathInfo,
+  lastEffects,
+  activeTags,
+  isNewHighScore,
+  startRun,
+  choose,
+  returnToMenu,
+} = useGame();
 
 const locked = ref(false);
 const pulseId = ref(0);
@@ -45,6 +58,8 @@ function handleChoose(direction: "left" | "right") {
       <div class="font-display text-xs tracking-[0.2em] uppercase mt-4" style="color: var(--cream); opacity: 0.6">
         Week {{ week }}
       </div>
+
+      <TagBanners :tags="activeTags" />
 
       <div class="flex-1 flex items-center justify-center w-full px-4 py-6">
         <GameCard
